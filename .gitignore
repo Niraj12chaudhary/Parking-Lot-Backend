@@ -4,6 +4,12 @@
 /build
 .env
 .env.*
+!.env.example
+!frontend/.env.example
+/frontend/.next
+/frontend/node_modules
+/frontend/dist
+/frontend/coverage
 
 
 # Logs

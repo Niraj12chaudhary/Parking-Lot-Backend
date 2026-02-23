@@ -1,17 +1,11 @@
 import { Injectable } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
 import { AllocationStrategy } from './allocation-strategy.interface';
-import { Spot, SpotType } from 'src/common/entities/spot.entity';
+import { Spot, SpotStatus, SpotType } from 'src/common/entities/spot.entity';
 import { VehicleType } from '../entities/vehicle.entity';
+import { EntityManager } from 'typeorm';
 
 @Injectable()
 export class FirstAvailableStrategy implements AllocationStrategy {
-  constructor(
-    @InjectRepository(Spot)
-    private spotRepo: Repository<Spot>,
-  ) {}
-
   private mapVehicleToSpot(vehicleType: VehicleType): SpotType[] {
     switch (vehicleType) {
       case VehicleType.CAR:
@@ -25,19 +19,25 @@ export class FirstAvailableStrategy implements AllocationStrategy {
     }
   }
 
-  async findSpot(vehicleType: VehicleType): Promise<Spot | null> {
+  async findSpot(
+    manager: EntityManager,
+    vehicleType: VehicleType,
+  ): Promise<Spot | null> {
     const allowedSpotTypes = this.mapVehicleToSpot(vehicleType);
+    if (allowedSpotTypes.length === 0) {
+      return null;
+    }
 
-    return this.spotRepo.findOne({
-      where: {
-        isOccupied: false,
-        type: allowedSpotTypes.length === 1 ? allowedSpotTypes[0] : undefined,
-      },
-      relations: ['floor'],
-      order: {
-        floor: { number: 'ASC' },
-        spotNumber: 'ASC',
-      },
-    });
+    return manager
+      .getRepository(Spot)
+      .createQueryBuilder('spot')
+      .innerJoinAndSelect('spot.floor', 'floor')
+      .where('spot.status = :status', { status: SpotStatus.AVAILABLE })
+      .andWhere('spot.type IN (:...allowedSpotTypes)', { allowedSpotTypes })
+      .setLock('pessimistic_write')
+      .setOnLocked('skip_locked')
+      .orderBy('floor.number', 'ASC')
+      .addOrderBy('spot.spotNumber', 'ASC')
+      .getOne();
   }
 }

@@ -1,4 +1,4 @@
-import { Entity, Column, OneToMany } from 'typeorm';
+import { Entity, Column, OneToMany, Index } from 'typeorm';
 import { BaseEntity } from '../../common/entities/base.entity';
 import { Ticket } from './ticket.entity';
 export enum VehicleType {
@@ -9,7 +9,8 @@ export enum VehicleType {
 
 @Entity()
 export class Vehicle extends BaseEntity {
-  @Column({ unique: true })
+  @Index({ unique: true })
+  @Column()
   vehicleNumber: string;
 
   @Column({

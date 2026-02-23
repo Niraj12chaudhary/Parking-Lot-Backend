@@ -1,4 +1,4 @@
-import { Entity, Column, OneToMany } from 'typeorm';
+import { Entity, Column, OneToMany, Index } from 'typeorm';
 import { BaseEntity } from '../../common/entities/base.entity';
 import { Ticket } from './ticket.entity';
 export enum GateType {
@@ -8,6 +8,7 @@ export enum GateType {
 
 @Entity()
 export class Gate extends BaseEntity {
+  @Index({ unique: true })
   @Column()
   name: string;
 

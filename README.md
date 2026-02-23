@@ -57,6 +57,28 @@ $ pnpm run test:e2e
 $ pnpm run test:cov
 ```
 
+## Database migrations and large scenario seeding
+
+```bash
+# run schema migrations
+$ pnpm migration:run
+
+# seed base data + large realistic scenario data
+$ pnpm seed
+```
+
+Scenario seeding is configurable through `.env.development`:
+
+- `SEED_RESET_SCENARIO_DATA`: truncate `ticket/payment/vehicle/audit_log` and rebuild scenarios
+- `SEED_COMPLETED_TICKETS`: total historical completed tickets to generate
+- `SEED_ACTIVE_TICKETS`: live active tickets to keep open
+- `SEED_FAILED_PAYMENTS`: failed payment scenarios
+- `SEED_PENDING_PAYMENTS`: pending payment scenarios
+- `SEED_RESERVED_SPOTS`: reserved spot scenarios
+- `SEED_OUT_OF_SERVICE_SPOTS`: maintenance/out-of-service spot scenarios
+- `SEED_DAYS_BACK`: historical spread window
+- `SEED_BATCH_SIZE`: batch size for high-volume inserts
+
 ## Deployment
 
 When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.

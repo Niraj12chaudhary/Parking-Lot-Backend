@@ -1,4 +1,4 @@
-import { Entity, Column, ManyToOne, OneToMany } from 'typeorm';
+import { Entity, Column, ManyToOne, OneToMany, Index } from 'typeorm';
 import { BaseEntity } from '../../common/entities/base.entity';
 import { Floor } from './floor.entity';
 import { Ticket } from '../../parking/entities/ticket.entity';
@@ -10,7 +10,16 @@ export enum SpotType {
   HANDICAPPED = 'handicapped',
 }
 
+export enum SpotStatus {
+  AVAILABLE = 'available',
+  OCCUPIED = 'occupied',
+  RESERVED = 'reserved',
+  OUT_OF_SERVICE = 'out_of_service',
+}
+
 @Entity()
+@Index(['status', 'type'])
+@Index(['floor', 'spotNumber'], { unique: true })
 export class Spot extends BaseEntity {
   @Column()
   spotNumber: string;
@@ -20,6 +29,13 @@ export class Spot extends BaseEntity {
     enum: SpotType,
   })
   type: SpotType;
+
+  @Column({
+    type: 'enum',
+    enum: SpotStatus,
+    default: SpotStatus.AVAILABLE,
+  })
+  status: SpotStatus;
 
   @Column({ default: false })
   isOccupied: boolean;

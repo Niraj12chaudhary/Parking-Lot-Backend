@@ -1,4 +1,4 @@
-import { Entity, Column, ManyToOne, OneToOne } from 'typeorm';
+import { Entity, Column, ManyToOne, OneToOne, Index } from 'typeorm';
 import { BaseEntity } from '../../common/entities/base.entity';
 import { Vehicle } from './vehicle.entity';
 import { Spot } from '../../common/entities/spot.entity';
@@ -10,11 +10,16 @@ export enum TicketStatus {
 }
 
 @Entity()
+@Index(['status', 'entryTime'])
 export class Ticket extends BaseEntity {
+  @Index({ unique: true })
   @Column()
+  ticketNumber: string;
+
+  @Column({ type: 'timestamp' })
   entryTime: Date;
 
-  @Column({ nullable: true })
+  @Column({ type: 'timestamp', nullable: true })
   exitTime: Date;
 
   @Column({
@@ -23,6 +28,12 @@ export class Ticket extends BaseEntity {
     default: TicketStatus.ACTIVE,
   })
   status: TicketStatus;
+
+  @Column({ nullable: true, type: 'int' })
+  durationMinutes?: number;
+
+  @Column({ nullable: true, type: 'numeric', precision: 10, scale: 2 })
+  calculatedAmount?: number;
 
   @ManyToOne(() => Vehicle, (vehicle) => vehicle.tickets)
   vehicle: Vehicle;
@@ -36,6 +47,6 @@ export class Ticket extends BaseEntity {
   @ManyToOne(() => Gate, (gate) => gate.exitTickets, { nullable: true })
   exitGate: Gate;
 
-  @OneToOne(() => Payment, (payment) => payment.ticket)
+  @OneToOne(() => Payment, (payment) => payment.ticket, { nullable: true })
   payment: Payment;
 }

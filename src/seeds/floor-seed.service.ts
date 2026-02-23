@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { Repository } from 'typeorm';
+import { EntityManager, Repository } from 'typeorm';
 import { Floor } from 'src/common/entities/floor.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 
@@ -10,7 +10,9 @@ export class FloorSeedService {
     private floorRepo: Repository<Floor>,
   ) {}
 
-  async createFloors() {
+  async createFloors(manager?: EntityManager) {
+    const floorRepo = manager ? manager.getRepository(Floor) : this.floorRepo;
+
     const floors = [
       { number: 1, name: 'Ground Floor' },
       { number: 2, name: 'First Floor' },
@@ -18,15 +20,13 @@ export class FloorSeedService {
     ];
 
     for (const f of floors) {
-      const exists = await this.floorRepo.findOne({
+      const exists = await floorRepo.findOne({
         where: { number: f.number },
       });
 
       if (!exists) {
-        await this.floorRepo.save(f);
+        await floorRepo.save(floorRepo.create(f));
       }
     }
-
-    console.log('Floors seeded.');
   }
 }

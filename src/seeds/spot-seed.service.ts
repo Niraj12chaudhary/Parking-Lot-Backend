@@ -1,9 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { EntityManager, Repository } from 'typeorm';
 
 import { Floor } from 'src/common/entities/floor.entity';
-import { Spot, SpotType } from 'src/common/entities/spot.entity';
+import { Spot, SpotStatus, SpotType } from 'src/common/entities/spot.entity';
 
 @Injectable()
 export class SpotSeedService {
@@ -15,11 +15,14 @@ export class SpotSeedService {
     private floorRepo: Repository<Floor>,
   ) {}
 
-  async createSpots() {
-    const floors = await this.floorRepo.find();
+  async createSpots(manager?: EntityManager) {
+    const spotRepo = manager ? manager.getRepository(Spot) : this.spotRepo;
+    const floorRepo = manager ? manager.getRepository(Floor) : this.floorRepo;
+
+    const floors = await floorRepo.find();
 
     for (const floor of floors) {
-      const existing = await this.spotRepo.count({
+      const existing = await spotRepo.count({
         where: { floor: { id: floor.id } },
       });
 
@@ -32,9 +35,10 @@ export class SpotSeedService {
       // 10 compact
       for (let i = 1; i <= 10; i++) {
         spots.push(
-          this.spotRepo.create({
+          spotRepo.create({
             spotNumber: `C-${i}`,
             type: SpotType.COMPACT,
+            status: SpotStatus.AVAILABLE,
             floor,
           }),
         );
@@ -43,9 +47,10 @@ export class SpotSeedService {
       // 5 large
       for (let i = 1; i <= 5; i++) {
         spots.push(
-          this.spotRepo.create({
+          spotRepo.create({
             spotNumber: `L-${i}`,
             type: SpotType.LARGE,
+            status: SpotStatus.AVAILABLE,
             floor,
           }),
         );
@@ -54,16 +59,16 @@ export class SpotSeedService {
       // 10 bike
       for (let i = 1; i <= 10; i++) {
         spots.push(
-          this.spotRepo.create({
+          spotRepo.create({
             spotNumber: `B-${i}`,
             type: SpotType.BIKE,
+            status: SpotStatus.AVAILABLE,
             floor,
           }),
         );
       }
 
-      await this.spotRepo.save(spots);
-      console.log(`Spots created for Floor ${floor.number}`);
+      await spotRepo.save(spots);
     }
   }
 }

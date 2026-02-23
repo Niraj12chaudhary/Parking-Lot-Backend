@@ -1,4 +1,4 @@
-import { Entity, Column, OneToOne, JoinColumn } from 'typeorm';
+import { Entity, Column, OneToOne, JoinColumn, Index } from 'typeorm';
 import { BaseEntity } from '../../common/entities/base.entity';
 import { Ticket } from './ticket.entity';
 
@@ -8,9 +8,16 @@ export enum PaymentMethod {
   UPI = 'upi',
 }
 
+export enum PaymentStatus {
+  PENDING = 'pending',
+  SUCCEEDED = 'succeeded',
+  FAILED = 'failed',
+}
+
 @Entity()
+@Index(['status', 'paidAt'])
 export class Payment extends BaseEntity {
-  @Column()
+  @Column({ type: 'numeric', precision: 10, scale: 2 })
   amount: number;
 
   @Column({ type: 'timestamp' })
@@ -21,6 +28,16 @@ export class Payment extends BaseEntity {
     enum: PaymentMethod,
   })
   method: PaymentMethod;
+
+  @Column({
+    type: 'enum',
+    enum: PaymentStatus,
+    default: PaymentStatus.PENDING,
+  })
+  status: PaymentStatus;
+
+  @Column({ type: 'jsonb', nullable: true })
+  breakdown?: Record<string, unknown>;
 
   @OneToOne(() => Ticket, (ticket) => ticket.payment)
   @JoinColumn()
